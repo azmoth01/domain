@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<title>메이플스토리 캐릭터 ocid 조회</title>
+<script type="text/javascript" src="https://openapi.nexon.com/js/analytics.js?app_id=249910" async></script>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background:#0f172a;
+  color:#fff;
+  padding:40px;
+  max-width:600px;
+  margin:auto;
+}
+
+@media (max-width: 640px) {
+  body {
+    padding:20px;
+  }
+}
+
+h1 { margin-bottom:20px; }
+
+.card {
+  background:#020617;
+  padding:20px;
+  border-radius:10px;
+  margin-top:20px;
+}
+
+label {
+  margin-right:15px;
+  cursor:pointer;
+}
+
+/* INPUT */
+input[type="text"] {
+  box-sizing: border-box;
+  padding:14px;
+  width:100%;
+  font-size:16px;
+  border-radius:6px;
+  border:2px solid #1e293b;
+  background:#020617;
+  color:#fff;
+  margin-top:12px;
+  outline:none;
+  transition: all 0.2s ease;
+}
+
+input[type="text"]:focus {
+  border-color:#38bdf8;
+  box-shadow: 0 0 0 2px rgba(56,189,248,0.2);
+}
+
+.btn-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* BUTTON */
+button {
+  box-sizing: border-box;
+  margin-top:14px;
+  padding:14px;
+  width:100%;
+  font-size:16px;
+  border-radius:6px;
+  background:#1e293b;
+  color:#fff;
+  border:none;
+  cursor:pointer;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background:#334155;
+}
+
+button:disabled {
+  opacity:0.6;
+  cursor:not-allowed;
+}
+
+/* RESULT */
+pre {
+  white-space:pre-wrap;
+  word-break:break-all;
+  background:#020617;
+  padding:12px;
+  border-radius:6px;
+  margin-top:12px;
+}
+
+/* COPY / DETAIL BUTTON */
+.copy-btn {
+  background:#020617;
+  border:1px solid #334155;
+}
+
+.copy-btn:hover {
+  background:#1e293b;
+}
+
+.error {
+  color:#f87171;
+}
+
+.notice {
+  margin-top:20px;
+  padding:14px 16px;
+  border-radius:8px;
+  background:#020617;
+  border-left:4px solid #1e3a8a;
+  font-size:14px;
+  line-height:1.6;
+  color:#aaa;
+}
+
+.notice strong {
+  color:#1e3a8a;
+}
+
+.small {
+  font-size:12px;
+  opacity:0.8;
+}
+</style>
+</head>
+
+<body>
+
+<h1>메이플스토리 캐릭터 ocid 조회 <font size="2" style="font-weight:1;">(유용한 기능은 없음)</font></h1>
+
+<div class="card">
+  <div>
+    <label>
+      <input type="radio" name="mode" value="ocid" checked />
+      캐릭터 이름 → ocid
+    </label>
+    <label>
+      <input type="radio" name="mode" value="character" />
+      ocid → 캐릭터 정보
+    </label>
+  </div>
+
+  <input id="input" type="text" placeholder="캐릭터 이름 입력" />
+  <button id="searchBtn">조회</button>
+
+  <div id="resultArea" style="display:none;">
+    <pre id="result"></pre>
+
+    <div id="errorDetail" style="display:none;">
+      <a class="copy-btn" style="padding:5px; border-radius:5px; cursor:pointer;" onclick="toggleDetail()">자세한 정보</a>
+      <pre id="detailContent" style="display:none;"></pre>
+    </div>
+
+    <div class="btn-row">
+      <button
+        id="copyBtn"
+        class="copy-btn"
+        onclick="copyResult()"
+        style="display:none; width:48%;"
+      >
+        결과 복사
+      </button>
+      <button
+        id="copyLinkBtn"
+        class="copy-btn"
+        onclick="copyLinkFunc()"
+        style="display:none; width:48%;"
+      >
+        링크 복사
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="notice">
+  <strong>참고</strong><br>
+  ocid는 캐릭터의 닉네임이 변경될 경우에는 변경되지 않으나, 월드가 변경될 경우 변경될 수 있습니다.
+</div>
+
+<p class="small" style="margin-top:40px;">
+  Data based on NEXON Open API.<br>
+  ChatGPT로 제작됨. 테스트 목적으로 제작됨.
+</p>
+
+<script>
+const input = document.getElementById("input");
+const resultBox = document.getElementById("result");
+const resultArea = document.getElementById("resultArea");
+const button = document.getElementById("searchBtn");
+const copyBtn = document.getElementById("copyBtn");
+const copyLinkBtn = document.getElementById("copyLinkBtn");
+const errorDetail = document.getElementById("errorDetail");
+const detailContent = document.getElementById("detailContent");
+
+let currentResult = "";
+let copyText = "";
+let copyLink = "";
+let lastErrorDetail = "";
+
+/* 라디오 변경 */
+document.querySelectorAll("input[name='mode']").forEach(radio => {
+  radio.addEventListener("change", () => {
+    resultArea.style.display = "none";
+    copyBtn.style.display = "none";
+    copyLinkBtn.style.display = "none";
+    errorDetail.style.display = "none";
+    detailContent.style.display = "none";
+    input.value = "";
+    input.placeholder =
+      radio.value === "ocid" ? "캐릭터 이름 입력" : "ocid 입력";
+  });
+});
+
+function errorMessage(status) {
+  switch (status) {
+    case 400: return "입력값이 올바르지 않습니다. (영문이 포함된 경우 대소문자를 구분해주세요.)";
+    case 403: return "API 키 권한이 없습니다.";
+    case 429: return "요청이 너무 많습니다. 잠시 후 다시 시도하세요.";
+    case 500: return "서버 오류가 발생했습니다.";
+    default: return "알 수 없는 오류";
+  }
+}
+
+/* 조회 */
+button.addEventListener("click", async () => {
+  const mode = document.querySelector("input[name='mode']:checked").value;
+  const value = input.value.trim();
+
+  resultArea.style.display = "block";
+  copyBtn.style.display = "none";
+  copyLinkBtn.style.display = "none";
+  errorDetail.style.display = "none";
+  detailContent.style.display = "none";
+
+  if (!value) {
+    resultBox.innerHTML = `<span class="error">값을 입력해주세요.</span>`;
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "조회 중...";
+  resultBox.textContent = "조회 중...";
+
+  try {
+    let res, data;
+
+    if (mode === "ocid") {
+      res = await fetch(`/nexon/ocid/api/ocid?character_name=${encodeURIComponent(value)}`);
+    } else {
+      res = await fetch(`/nexon/ocid/api/character?ocid=${value}`);
+    }
+
+    data = await res.json();
+
+    if (!res.ok) {
+      lastErrorDetail =
+`HTTP ${res.status}
+${JSON.stringify(data, null, 2)}`;
+      throw res.status;
+    }
+
+    if (mode === "ocid") {
+      currentResult = `ocid:\n${data.ocid}`;
+      copyText = `닉네임: ${value} | ocid: ${data.ocid}`;
+      copyLink = `https://nexon-ocid.vercel.app/?nick=${value}`;
+    } else {
+      currentResult =
+`닉네임: ${data.character_name}
+월드: ${data.world_name}
+직업: ${data.character_class}
+레벨: ${data.character_level}
+길드: ${data.character_guild_name || "없음"}`;
+      copyText = `닉네임: ${data.character_name} | 월드: ${data.world_name} | 직업: ${data.character_class} | 레벨: ${data.character_level} | 길드: ${data.character_guild_name || "없음"} | ocid: ${value}`
+      copyLink = `https://nexon-ocid.vercel.app/?ocid=${value}`;
+    }
+
+    resultBox.textContent = currentResult;
+    copyBtn.style.display = "block";
+    copyLinkBtn.style.display = "block";
+
+  } catch (status) {
+    resultBox.innerHTML =
+      `<span class="error">${errorMessage(status)}</span>`;
+    errorDetail.style.display = "block";
+    detailContent.textContent = lastErrorDetail;
+    copyBtn.style.display = "none";
+    copyLinkBtn.style.display = "none";
+  } finally {
+    button.disabled = false;
+    button.textContent = "조회";
+  }
+});
+
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    button.click();
+  }
+});
+
+
+/* 상세 토글 */
+function toggleDetail() {
+  detailContent.style.display =
+    detailContent.style.display === "none" ? "block" : "none";
+}
+
+/* 복사 */
+function copyResult() {
+  if (!currentResult) return;
+  navigator.clipboard.writeText(copyText);
+  copyBtn.textContent = "결과 복사 완료";
+  setTimeout(() => {
+    copyBtn.textContent = "결과 복사";
+  }, 3000);
+}
+
+function copyLinkFunc() {
+  if (!copyLink) return;
+  navigator.clipboard.writeText(copyLink);
+  copyLinkBtn.textContent = "링크 복사 완료";
+  setTimeout(() => {
+    copyLinkBtn.textContent = "링크 복사";
+  }, 3000);
+}
+
+/* --- URL 파라미터 자동 조회 --- */
+window.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const ocid = params.get("ocid");
+  const nick = params.get("nick");
+
+  if (ocid) {
+    // ocid → 캐릭터 정보
+    document.querySelector("input[value='character']").checked = true;
+    input.placeholder = "ocid 입력";
+    input.value = ocid;
+
+    // 약간의 딜레이 후 조회 (렌더 안정성)
+    setTimeout(() => {
+      button.click();
+    }, 100);
+  }
+
+  if (nick) {
+    // 닉네임 → ocid
+    document.querySelector("input[value='ocid']").checked = true;
+    input.placeholder = "캐릭터 이름 입력";
+    input.value = nick;
+
+    setTimeout(() => {
+      button.click();
+    }, 100);
+  }
+});
+
+</script>
+
+</body>
+</html>
