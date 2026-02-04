@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Domain · Fingerprint Viewer</title>
+
+    <style>
+        :root {
+            --bg: #ffffff;
+            --text: #000000;
+            --card-bg: #ffffff;
+            --border: #ddd;
+            --pre-bg: #f4f4f4;
+            --btn-bg: #f0f0f0;
+            --btn-text: #000;
+            --btn-active: #c8d8ff;
+
+            --scroll-track: #f0f0f0;
+            --scroll-thumb: #c0c0c0;
+        }
+
+        [data-theme="dark"] {
+            --bg: #121212;
+            --text: #e8e8e8;
+            --card-bg: #1e1e1e;
+            --border: #333;
+            --pre-bg: #181818;
+            --btn-bg: #2a2a2a;
+            --btn-text: #e8e8e8;
+            --btn-active: #2c3c5c;
+
+            --scroll-track: #1a1a1a;
+            --scroll-thumb: #555;
+        }
+
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: var(--bg);
+            color: var(--text);
+            transition: background 0.25s, color 0.25s;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1;
+            padding: 20px;
+        }
+
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 12px;
+            text-align: center;
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        button, select {
+            cursor: pointer;
+            background: var(--btn-bg);
+            color: var(--btn-text);
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+
+        button.active {
+            background: var(--btn-active);
+        }
+
+        .mode-toggle {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        pre {
+            background: var(--pre-bg);
+            padding: 15px;
+            overflow-x: auto;
+            border-radius: 6px;
+        }
+
+        .copy-btn {
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: var(--text);
+        }
+
+        .copy-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .copy-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .copy-msg {
+            font-size: 12px;
+            color: limegreen;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .copy-msg.show {
+            opacity: 1;
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            background: var(--card-bg);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-weight: bold;
+        }
+
+        .card-value {
+            background: var(--pre-bg);
+            padding: 10px;
+            overflow-x: auto;
+            white-space: pre;
+            border-radius: 6px;
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+        }
+
+        ::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--scroll-track);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--scroll-thumb);
+            border-radius: 6px;
+        }
+    </style>
+</head>
+
+<body>
+
+<main>
+
+    <h2>Fingerprint Viewer</h2>
+
+    <div class="mode-toggle">
+        <button id="mode1Btn" onclick="setMode(1)">Output 1</button>
+        <button id="mode2Btn" onclick="setMode(2)">Output 2</button>
+
+        <select id="themeSelect" onchange="setTheme(this.value)">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+        </select>
+    </div>
+
+    <div id="output"></div>
+
+</main>
+
+<footer>
+    domain.ggm.kr · azmoth01<br><br>
+    All data is processed locally in your browser. Nothing is sent to any server.
+</footer>
+
+<script>
+    let fingerprintData = {};
+    let currentMode = Number(localStorage.getItem("mode"));
+    if (![1,2].includes(currentMode)) {
+        currentMode = 1;
+    }
+
+    function applyTheme(theme) {
+        if (theme === "system") {
+            const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+        } else {
+            document.documentElement.setAttribute("data-theme", theme);
+        }
+    }
+
+    function setTheme(theme) {
+        localStorage.setItem("theme", theme);
+        applyTheme(theme);
+    }
+
+    (function initTheme() {
+        const saved = localStorage.getItem("theme") || "system";
+        document.getElementById("themeSelect").value = saved;
+        applyTheme(saved);
+
+        window.matchMedia("(prefers-color-scheme: dark)")
+            .addEventListener("change", () => {
+                if ((localStorage.getItem("theme") || "system") === "system") {
+                    applyTheme("system");
+                }
+            });
+    })();
+
+    function copyText(text, id) {
+        navigator.clipboard.writeText(text);
+        const msg = document.getElementById(id);
+        if (!msg) return;
+
+        msg.classList.add("show");
+        setTimeout(() => msg.classList.remove("show"), 1500);
+    }
+
+    function copyIcon(text) {
+        const id = "copy_" + Math.random().toString(36).slice(2);
+
+        return `
+            <span class="copy-wrap">
+                <span class="copy-msg" id="${id}">Copied.</span>
+                <button class="copy-btn"
+                    onclick='copyText(${JSON.stringify(text)}, "${id}")'>
+                    <svg viewBox="0 0 24 24">
+                        <path fill="currentColor"
+                        d="M16 1H4C2.9 1 2 1.9 2 3V15H4V3H16V1M19
+                        5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1
+                        23 21 22.1 21 21V7C21 5.9 20.1 5 19 5M19
+                        21H8V7H19V21Z"/>
+                    </svg>
+                </button>
+            </span>
+        `;
+    }
+
+    function setMode(mode) {
+        if (mode !== 1 && mode !== 2) {
+            console.log("invalid mode.");
+            return;
+        }
+
+        currentMode = mode;
+
+        document.getElementById("mode1Btn").classList.toggle("active", mode === 1);
+        document.getElementById("mode2Btn").classList.toggle("active", mode === 2);
+
+        localStorage.setItem("mode", mode);
+
+        render();
+    }
+
+    function renderMode1(data) {
+        const json = JSON.stringify(data, null, 2);
+
+        document.getElementById("output").innerHTML = `
+            <div>
+                <span style="display:flex; justify-content:flex-end;">
+                    ${copyIcon(json)}
+                </span>
+                <pre>${json}</pre>
+            </div>
+        `;
+    }
+
+    function renderMode2(data) {
+        let html = "";
+
+        for (const key in data) {
+            const text = JSON.stringify(data[key], null, 2);
+
+            html += `
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">${key}</div>
+                        ${copyIcon(text)}
+                    </div>
+                    <div class="card-value">${text}</div>
+                </div>
+            `;
+        }
+
+        document.getElementById("output").innerHTML = html;
+    }
+
+    function render() {
+        if (currentMode === 1) renderMode1(fingerprintData);
+        else renderMode2(fingerprintData);
+    }
+
+    async function collectFingerprint() {
+        const data = {};
+
+        data.userAgent = navigator.userAgent;
+        data.platform = navigator.platform;
+        data.vendor = navigator.vendor;
+        data.language = navigator.language;
+        data.languages = navigator.languages;
+        data.hardwareConcurrency = navigator.hardwareConcurrency;
+        data.deviceMemory = navigator.deviceMemory;
+        data.maxTouchPoints = navigator.maxTouchPoints;
+
+        data.screen = {
+            width: screen.width,
+            height: screen.height,
+            pixelRatio: window.devicePixelRatio
+        };
+
+        data.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        if (navigator.userAgentData) {
+            data.clientHints = {
+                brands: navigator.userAgentData.brands,
+                mobile: navigator.userAgentData.mobile,
+                platform: navigator.userAgentData.platform
+            };
+
+            try {
+                data.clientHints.highEntropy =
+                    await navigator.userAgentData.getHighEntropyValues([
+                        "architecture",
+                        "bitness",
+                        "model",
+                        "platformVersion",
+                        "uaFullVersion"
+                    ]);
+            } catch (e) {}
+        }
+
+        try {
+            const canvas = document.createElement("canvas");
+            const gl = canvas.getContext("webgl");
+
+            if (gl) {
+                const dbg = gl.getExtension("WEBGL_debug_renderer_info");
+
+                if (dbg) {
+                    data.webgl = {
+                        vendor: gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL),
+                        renderer: gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)
+                    };
+                }
+            }
+        } catch (e) {}
+
+        try {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+
+            ctx.font = "16px Arial";
+            ctx.fillText("FingerprintTest123", 2, 2);
+
+            data.canvasFingerprint =
+                canvas.toDataURL().slice(0, 80) + "...";
+        } catch (e) {}
+
+        fingerprintData = data;
+        setMode(currentMode);
+    }
+
+    collectFingerprint();
+</script>
+
+</body>
+</html>
