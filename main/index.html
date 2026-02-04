@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Domain · Main Page</title>
+
+    <style>
+        :root {
+            --bg: #ffffff;
+            --text: #000000;
+            --card-bg: #ffffff;
+            --border: #ddd;
+            --pre-bg: #f4f4f4;
+            --btn-bg: #f0f0f0;
+            --btn-text: #000;
+            --btn-active: #c8d8ff;
+
+            --scroll-track: #f0f0f0;
+            --scroll-thumb: #c0c0c0;
+        }
+
+        [data-theme="dark"] {
+            --bg: #121212;
+            --text: #e8e8e8;
+            --card-bg: #1e1e1e;
+            --border: #333;
+            --pre-bg: #181818;
+            --btn-bg: #2a2a2a;
+            --btn-text: #e8e8e8;
+            --btn-active: #2c3c5c;
+
+            --scroll-track: #1a1a1a;
+            --scroll-thumb: #555;
+        }
+
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1;
+            padding: 20px;
+        }
+
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 12px;
+            text-align: center;
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        button, select {
+            cursor: pointer;
+            background: var(--btn-bg);
+            color: var(--btn-text);
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+
+        button.active {
+            background: var(--btn-active);
+        }
+
+        .mode-toggle {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        pre {
+            background: var(--pre-bg);
+            padding: 15px;
+            overflow-x: auto;
+            border-radius: 6px;
+        }
+
+        .copy-btn {
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: var(--text);
+        }
+
+        .copy-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .copy-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .copy-msg {
+            font-size: 12px;
+            color: limegreen;
+            opacity: 0;
+            transition: opacity 0.2s;
+            user-select: none;
+        }
+
+        .copy-msg.show {
+            opacity: 1;
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            background: var(--card-bg);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-weight: bold;
+        }
+
+        .card-value {
+            background: var(--pre-bg);
+            padding: 10px;
+            overflow-x: auto;
+            white-space: pre;
+            border-radius: 6px;
+        }
+
+        .footer-link {
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+        }
+
+        ::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--scroll-track);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--scroll-thumb);
+            border-radius: 6px;
+        }
+    </style>
+</head>
+
+<body>
+
+<main>
+
+    <h2>Main Page</h2>
+
+    <div class="mode-toggle">
+        <select id="themeSelect" onchange="setTheme(this.value)">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+        </select>
+    </div>
+
+    <div id="output">
+        <button onclick="location.href = '/fp'">Fingerprint Page</button>
+    </div>
+
+</main>
+
+<footer>
+    <a href="/main" class="footer-link">domain.ggm.kr</a> · <a href="https://github.com/azmoth01/domain" class="footer-link">azmoth01</a><br><br>
+    All data is processed locally in your browser. Nothing is sent to any server.
+</footer>
+
+<script>
+    function applyTheme(theme) {
+        if (theme === "system") {
+            const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+        } else {
+            document.documentElement.setAttribute("data-theme", theme);
+        }
+    }
+
+    function setTheme(theme) {
+        localStorage.setItem("theme", theme);
+        applyTheme(theme);
+    }
+
+    (function initTheme() {
+        const saved = localStorage.getItem("theme") || "system";
+        document.getElementById("themeSelect").value = saved;
+        applyTheme(saved);
+
+        window.matchMedia("(prefers-color-scheme: dark)")
+            .addEventListener("change", () => {
+                if ((localStorage.getItem("theme") || "system") === "system") {
+                    applyTheme("system");
+                }
+            });
+    })();
+</script>
+
+</body>
+</html>
