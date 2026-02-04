@@ -194,7 +194,7 @@
 
 <script>
     let fingerprintData = {};
-    let currentMode = Number(localStorage.getItem("mode"));
+    let currentMode = Number(localStorage.getItem("fp_mode"));
     if (![1,2].includes(currentMode)) {
         currentMode = 1;
     }
@@ -266,7 +266,7 @@
         document.getElementById("mode1Btn").classList.toggle("active", mode === 1);
         document.getElementById("mode2Btn").classList.toggle("active", mode === 2);
 
-        localStorage.setItem("mode", mode);
+        localStorage.setItem("fp_mode", mode);
 
         render();
     }
