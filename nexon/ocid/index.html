@@ -270,7 +270,7 @@ ${JSON.stringify(data, null, 2)}`;
     if (mode === "ocid") {
       currentResult = `ocid:\n${data.ocid}`;
       copyText = `닉네임: ${value} | ocid: ${data.ocid}`;
-      copyLink = `https://nexon-ocid.vercel.app/?nick=${value}`;
+      copyLink = `https://domain.ggm.kr/nexon/ocid/?nick=${value}`;
     } else {
       currentResult =
 `닉네임: ${data.character_name}
@@ -279,7 +279,7 @@ ${JSON.stringify(data, null, 2)}`;
 레벨: ${data.character_level}
 길드: ${data.character_guild_name || "없음"}`;
       copyText = `닉네임: ${data.character_name} | 월드: ${data.world_name} | 직업: ${data.character_class} | 레벨: ${data.character_level} | 길드: ${data.character_guild_name || "없음"} | ocid: ${value}`
-      copyLink = `https://nexon-ocid.vercel.app/?ocid=${value}`;
+      copyLink = `https://domain.ggm.kr/nexon/ocid/?ocid=${value}`;
     }
 
     resultBox.textContent = currentResult;
