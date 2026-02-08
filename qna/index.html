@@ -1,57 +1,219 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Domain · 문의</title>
+
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+<style>
+:root {
+    --bg: #ffffff;
+    --text: #000000;
+    --card-bg: #ffffff;
+    --border: #ddd;
+    --input-bg: #ffffff;
+    --btn-bg: #f0f0f0;
+    --btn-text: #000;
+    --btn-active: #c8d8ff;
+}
+
+[data-theme="dark"] {
+    --bg: #121212;
+    --text: #e8e8e8;
+    --card-bg: #1e1e1e;
+    --border: #333;
+    --input-bg: #1a1a1a;
+    --btn-bg: #2a2a2a;
+    --btn-text: #e8e8e8;
+    --btn-active: #2c3c5c;
+}
+
+body {
+    font-family: monospace;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+    padding: 20px;
+    max-width: 600px;
+    margin: auto;
+}
+
+footer {
+    border-top: 1px solid var(--border);
+    padding: 12px;
+    text-align: center;
+    font-size: 13px;
+    opacity: 0.7;
+}
+
+.card {
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 8px;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    margin-bottom: 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--input-bg);
+    color: var(--text);
+    font-family: monospace;
+}
+
+textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+button {
+    cursor: pointer;
+    background: var(--btn-bg);
+    color: var(--btn-text);
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+
+button:hover {
+    background: var(--btn-active);
+}
+
+.mode-toggle {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.footer-link {
+    text-decoration: none;
+    color: var(--text);
+}
+</style>
 </head>
+
 <body>
+
+<main>
 
 <h2>문의하기</h2>
 
-<form id="contactForm">
-  <input name="name" placeholder="이름" required><br><br>
-  <input name="email" placeholder="이메일" required><br><br>
-  <textarea name="message" placeholder="문의 내용" required></textarea><br><br>
+<div class="card">
 
-  <button>전송</button>
+<form id="contactForm">
+
+<label>이름</label>
+<input name="name" required>
+
+<label>이메일</label>
+<input name="email" required>
+
+<label>문의 내용</label>
+<textarea name="message" required></textarea>
+
+<div class="cf-turnstile" data-sitekey="0x4AAAAAACZFxuWayoJpfKgZ"></div>
+
+<br>
+<button id="submitBtn">전송</button>
+
 </form>
 
 <p id="result"></p>
 
+</div>
+
+</main>
+
+<footer>
+<a href="/main" class="footer-link">domain.ggm.kr</a> ·
+<a href="https://github.com/azmoth01/domain" class="footer-link">azmoth01</a>
+</footer>
+
 <script>
+function applyTheme(theme) {
+    if (theme === "system") {
+        const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    } else {
+        document.documentElement.setAttribute("data-theme", theme);
+    }
+}
+
+(function initTheme() {
+    const saved = localStorage.getItem("theme") || "system";
+    applyTheme(saved);
+
+    window.matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", () => {
+            if ((localStorage.getItem("theme") || "system") === "system") {
+                applyTheme("system");
+            }
+        });
+})();
+
+/* ======================
+   문의 전송
+====================== */
+
 const form = document.getElementById("contactForm");
 const result = document.getElementById("result");
+const submitBtn = document.getElementById("submitBtn");
 
 form.addEventListener("submit", async (e) => {
-  e.preventDefault();
 
-  const data = {
-    name: form.name.value,
-    email: form.email.value,
-    message: form.message.value
-  };
+    e.preventDefault();
+    submitBtn.disabled = true;
 
-  try {
-    const res = await fetch("https://domain-nexon-ocid-d28a.azmoth01.workers.dev/contact", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data)
-    });
+    const token = document.querySelector('[name="cf-turnstile-response"]')?.value;
 
-    const json = await res.json();
+    const data = {
+        name: form.name.value,
+        email: form.email.value,
+        message: form.message.value,
+        turnstileToken: token
+    };
 
-    if (json.success) {
-      result.textContent = "문의가 전송되었습니다.";
-      form.reset();
-    } else {
-      result.textContent = json.error?.message;
+    try {
+
+        const res = await fetch(
+            "https://domain-nexon-ocid-d28a.azmoth01.workers.dev/contact",
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            }
+        );
+
+        const json = await res.json();
+
+        if (json.success) {
+            result.textContent = "문의가 전송되었습니다.";
+            form.reset();
+            if (window.turnstile) turnstile.reset();
+        }
+        else {
+            result.textContent = json.error?.message;
+        }
+
+    } catch {
+        result.textContent = "전송 실패";
     }
 
-  } catch {
-    result.textContent = "전송 실패";
-  }
+    submitBtn.disabled = false;
 });
 </script>
 
