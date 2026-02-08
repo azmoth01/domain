@@ -224,7 +224,7 @@ form.addEventListener("submit", async (e) => {
         const json = await res.json();
 
         if (json.success) {
-            result.textContent = "문의가 전송되었습니다.";
+            result.textContent = `문의가 전송되었습니다. (Ticket: ${json.ticket})`;
             form.reset();
         }
         else {
