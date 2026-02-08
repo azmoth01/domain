@@ -199,7 +199,7 @@ form.addEventListener("submit", async (e) => {
     const token = document.querySelector('[name="cf-turnstile-response"]')?.value;
 
     if (!token) {
-        result.textContent = "TurnStile 검증을 완료해주세요.";
+        result.textContent = "Turnstile 검증을 완료해주세요.";
         submitBtn.disabled = false;
         return;
     }
