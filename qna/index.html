@@ -114,8 +114,8 @@ button:hover {
 
 <form id="contactForm">
 
-<label>이름</label>
-<input name="name" required>
+<label>제목</label>
+<input name="title" required>
 
 <label>이메일</label>
 <input name="email" required>
@@ -145,11 +145,6 @@ button:hover {
 </footer>
 
 <script>
-
-/* ======================
-   ⭐ 테마 적용 + Turnstile 동기화
-====================== */
-
 function applyTheme(theme) {
 
     let finalTheme = theme;
@@ -189,7 +184,7 @@ function applyTheme(theme) {
 })();
 
 /* ======================
-   ⭐ 문의 전송
+   문의 전송
 ====================== */
 
 const form = document.getElementById("contactForm");
@@ -210,7 +205,7 @@ form.addEventListener("submit", async (e) => {
     }
 
     const data = {
-        name: form.name.value,
+        title: form.title.value,
         email: form.email.value,
         message: form.message.value,
         turnstileToken: token
