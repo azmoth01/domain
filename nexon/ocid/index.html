@@ -186,8 +186,7 @@ pre {
 </div>
 
 <p class="small" style="margin-top:40px;">
-  Data based on NEXON Open API.<br>
-  ChatGPT로 제작됨. 테스트 목적으로 제작됨.
+  Data based on NEXON Open API.
 </p>
 
 <script>
@@ -253,9 +252,9 @@ button.addEventListener("click", async () => {
     let res, data;
 
     if (mode === "ocid") {
-      res = await fetch(`https://domain-nexon-ocid-d28a.azmoth01.workers.dev/id?name=${encodeURIComponent(value)}`);
+      res = await fetch(`https://domain-d28a.azmoth01.workers.dev/id?name=${encodeURIComponent(value)}`);
     } else {
-      res = await fetch(`https://domain-nexon-ocid-d28a.azmoth01.workers.dev/basic?ocid=${value}`);
+      res = await fetch(`https://domain-d28a.azmoth01.workers.dev/basic?ocid=${value}`);
     }
 
     data = await res.json();
