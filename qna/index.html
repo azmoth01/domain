@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Domain · 문의</title>
+</head>
+<body>
+
+<h2>문의하기</h2>
+
+<form id="contactForm">
+  <input name="name" placeholder="이름" required><br><br>
+  <input name="email" placeholder="이메일" required><br><br>
+  <textarea name="message" placeholder="문의 내용" required></textarea><br><br>
+
+  <button>전송</button>
+</form>
+
+<p id="result"></p>
+
+<script>
+const form = document.getElementById("contactForm");
+const result = document.getElementById("result");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const data = {
+    name: form.name.value,
+    email: form.email.value,
+    message: form.message.value
+  };
+
+  try {
+    const res = await fetch("https://domain-nexon-ocid-d28a.azmoth01.workers.dev/contact", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
+
+    const json = await res.json();
+
+    if (json.success) {
+      result.textContent = "문의가 전송되었습니다.";
+      form.reset();
+    } else {
+      result.textContent = json.error?.message;
+    }
+
+  } catch {
+    result.textContent = "전송 실패";
+  }
+});
+</script>
+
+</body>
+</html>
