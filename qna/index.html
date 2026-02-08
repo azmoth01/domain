@@ -227,17 +227,17 @@ form.addEventListener("submit", async (e) => {
         if (json.success) {
             result.textContent = "문의가 전송되었습니다.";
             form.reset();
-
-            if (window.turnstile)
-                turnstile.reset();
         }
         else {
-            result.textContent = json.error?.message || "전송 실패";
+            result.textContent = json.error?.message || "전송에 실패했습니다.";
         }
 
     } catch {
-        result.textContent = "전송 실패";
+        result.textContent = "전송에 실패했습니다.";
     }
+
+    if (window.turnstile)
+        turnstile.reset();
 
     submitBtn.disabled = false;
 });
