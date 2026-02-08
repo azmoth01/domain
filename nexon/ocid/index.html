@@ -253,7 +253,7 @@ button.addEventListener("click", async () => {
     let res, data;
 
     if (mode === "ocid") {
-      res = await fetch(`https://domain-nexon-ocid-d28a.azmoth01.workers.dev/id?character_name=${encodeURIComponent(value)}`);
+      res = await fetch(`https://domain-nexon-ocid-d28a.azmoth01.workers.dev/id?name=${encodeURIComponent(value)}`);
     } else {
       res = await fetch(`https://domain-nexon-ocid-d28a.azmoth01.workers.dev/basic?ocid=${value}`);
     }
