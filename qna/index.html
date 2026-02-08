@@ -63,7 +63,7 @@ footer {
 }
 
 input, textarea {
-    width: 100%;
+    width: calc(100% - 20px);
     padding: 10px;
     margin-top: 6px;
     margin-bottom: 14px;
@@ -93,15 +93,13 @@ button:hover {
     background: var(--btn-active);
 }
 
-.mode-toggle {
-    margin-bottom: 20px;
-    display: flex;
-    gap: 10px;
-}
-
 .footer-link {
     text-decoration: none;
     color: var(--text);
+}
+
+#turnstileWidget {
+    min-height: 65px;
 }
 </style>
 </head>
@@ -125,7 +123,10 @@ button:hover {
 <label>문의 내용</label>
 <textarea name="message" required></textarea>
 
-<div class="cf-turnstile" data-sitekey="0x4AAAAAACZFxuWayoJpfKgZ"></div>
+<div id="turnstileWidget"
+     class="cf-turnstile"
+     data-sitekey="0x4AAAAAACZFxuWayoJpfKgZ">
+</div>
 
 <br>
 <button id="submitBtn">전송</button>
@@ -144,16 +145,37 @@ button:hover {
 </footer>
 
 <script>
+
+/* ======================
+   ⭐ 테마 적용 + Turnstile 동기화
+====================== */
+
 function applyTheme(theme) {
+
+    let finalTheme = theme;
+
     if (theme === "system") {
         const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
-    } else {
-        document.documentElement.setAttribute("data-theme", theme);
+        finalTheme = dark ? "dark" : "light";
+    }
+
+    document.documentElement.setAttribute("data-theme", finalTheme);
+
+    // Turnstile theme sync
+    const widget = document.getElementById("turnstileWidget");
+
+    if (widget) {
+        widget.setAttribute("data-theme", finalTheme);
+
+        if (window.turnstile) {
+            turnstile.remove(widget);
+            turnstile.render(widget);
+        }
     }
 }
 
 (function initTheme() {
+
     const saved = localStorage.getItem("theme") || "system";
     applyTheme(saved);
 
@@ -163,10 +185,11 @@ function applyTheme(theme) {
                 applyTheme("system");
             }
         });
+
 })();
 
 /* ======================
-   문의 전송
+   ⭐ 문의 전송
 ====================== */
 
 const form = document.getElementById("contactForm");
@@ -179,6 +202,12 @@ form.addEventListener("submit", async (e) => {
     submitBtn.disabled = true;
 
     const token = document.querySelector('[name="cf-turnstile-response"]')?.value;
+
+    if (!token) {
+        result.textContent = "보안 확인을 완료해주세요.";
+        submitBtn.disabled = false;
+        return;
+    }
 
     const data = {
         name: form.name.value,
@@ -203,10 +232,12 @@ form.addEventListener("submit", async (e) => {
         if (json.success) {
             result.textContent = "문의가 전송되었습니다.";
             form.reset();
-            if (window.turnstile) turnstile.reset();
+
+            if (window.turnstile)
+                turnstile.reset();
         }
         else {
-            result.textContent = json.error?.message;
+            result.textContent = json.error?.message || "전송 실패";
         }
 
     } catch {
@@ -215,6 +246,7 @@ form.addEventListener("submit", async (e) => {
 
     submitBtn.disabled = false;
 });
+
 </script>
 
 </body>
