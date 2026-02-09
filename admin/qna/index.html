@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Domain · 문의 목록</title>
+</head>
+<body>
+
+<!--<h1>문의 목록</h1>
+<pre id="result">Loading...</pre>-->
+
+<script>
+
+async function loadQna() {
+
+  const res = await fetch(
+    "https://domain-d28a.azmoth01.workers.dev/admin/qna",
+    {
+      method: "GET",
+      credentials: "include"
+    }
+  );
+
+  if (res.redirected) {
+    location.href = res.url;
+    return;
+  }
+
+  if (!res.ok) {
+    document.getElementById("result").textContent =
+      "불러오기 실패";
+    return;
+  }
+
+  const html = await res.text();
+
+  document.open();
+  document.write(html);
+  document.close();
+}
+
+loadQna();
+
+</script>
+
+</body>
+</html>
