@@ -119,6 +119,7 @@ async function login() {
 
     const res = await fetch("https://domain-d28a.azmoth01.workers.dev/admin/login", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             id: id.value,
