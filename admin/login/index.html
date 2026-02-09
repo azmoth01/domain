@@ -117,7 +117,7 @@ function applyTheme(theme) {
 // 로그인
 async function login() {
 
-    const res = await fetch("/admin/login", {
+    const res = await fetch("https://domain-d28a.azmoth01.workers.dev/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -127,7 +127,7 @@ async function login() {
     });
 
     if (res.ok) {
-        location.href = "/admin/qna";
+        location.href = "https://domain-d28a.azmoth01.workers.dev/admin/qna";
     } else {
         alert("로그인 실패");
     }
