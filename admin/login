@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Domain · Login</title>
+
+<style>
+:root {
+    --bg: #ffffff;
+    --text: #000000;
+    --card-bg: #ffffff;
+    --border: #ddd;
+    --pre-bg: #f4f4f4;
+    --btn-bg: #f0f0f0;
+    --btn-text: #000;
+    --btn-active: #c8d8ff;
+}
+
+[data-theme="dark"] {
+    --bg: #121212;
+    --text: #e8e8e8;
+    --card-bg: #1e1e1e;
+    --border: #333;
+    --pre-bg: #181818;
+    --btn-bg: #2a2a2a;
+    --btn-text: #e8e8e8;
+    --btn-active: #2c3c5c;
+}
+
+body {
+    margin: 0;
+    font-family: monospace;
+    background: var(--bg);
+    color: var(--text);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 25px;
+    border-radius: 8px;
+    width: 260px;
+}
+
+.card-title {
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--pre-bg);
+    color: var(--text);
+    font-family: monospace;
+}
+
+button {
+    width: 100%;
+    cursor: pointer;
+    background: var(--btn-bg);
+    color: var(--btn-text);
+    border: 1px solid var(--border);
+    padding: 8px;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+
+button:hover {
+    background: var(--btn-active);
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+    <div class="card-title">Login</div>
+
+    <input id="id" placeholder="ID" />
+    <input id="pw" type="password" placeholder="Password" />
+
+    <button onclick="login()">로그인</button>
+</div>
+
+<script>
+function applyTheme(theme) {
+    if (theme === "system") {
+        const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+    } else {
+        document.documentElement.setAttribute("data-theme", theme);
+    }
+}
+
+(function initTheme() {
+    const saved = localStorage.getItem("theme") || "system";
+    applyTheme(saved);
+
+    window.matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", () => {
+            if ((localStorage.getItem("theme") || "system") === "system") {
+                applyTheme("system");
+            }
+        });
+})();
+
+// 로그인
+async function login() {
+
+    const res = await fetch("/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            id: id.value,
+            password: pw.value
+        })
+    });
+
+    if (res.ok) {
+        location.href = "/admin/qna";
+    } else {
+        alert("로그인 실패");
+    }
+}
+</script>
+
+</body>
+</html>
