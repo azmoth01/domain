@@ -127,7 +127,7 @@ button:disabled {
 <input name="email" required>
 
 <label>문의 내용</label>
-<textarea name="content" required></textarea>
+<textarea name="contents" required></textarea>
 
 <br>
 <button id="submitBtn">전송</button>
@@ -212,7 +212,7 @@ form.addEventListener("submit", async (e) => {
     const data = {
         title: form.title.value,
         email: form.email.value,
-        content: form.content.value,
+        contents: form.contents.value,
         turnstileToken: token
     };
 
