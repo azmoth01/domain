@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Redirecting...</title>
+  <style>
+    btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #ffffff;
+      color: #444;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 5px 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    btn:hover {
+      background-color: #f7f7f7;
+    }
+    btn:active {
+      background-color: #efefef;
+    }
+    btn:disabled {
+      background-color: #dfdfdf;
+      cursor: not-allowed;
+    }
+  </style>
+  <script>
+    (function() {
+      var path = window.location.pathname;
+      var query = window.location.search;
+      var hash = window.location.hash;
+
+      var newDomain = "https://ks.ggm.kr";
+
+      var newUrl = newDomain + path + query + hash;
+
+      window.location.replace(newUrl);
+    })();
+  </script>
+</head>
+<body>
+  domain.ggm.kr 도메인은 더 이상 사용되지 않습니다. ks.ggm.kr로 리다이렉트 됩니다....<br><button class="btn">ks.ggm.kr 메인으로 이동</button>
+</body>
+</html>
